@@ -36,8 +36,25 @@ describe("tasks", () => {
       expect(createTask(db, { title: "Estimate", estimateHours: hours }).estimateHours).toBe(hours);
     });
 
-    it.each([0, 41, 1.5, "3", "abc"])("rejects %j and stores nothing", (hours) => {
+    it.each([
+      ["0", 0],
+      ["41", 41],
+      ["-1", -1],
+      ["1.5", 1.5],
+      ['"3"', "3"],
+      ['"abc"', "abc"],
+      ["true", true],
+      ["[]", []],
+      ["{}", {}],
+    ])("rejects %s and stores nothing", (_label, hours) => {
       expect(() => createTask(db, { title: "Estimate", estimateHours: hours })).toThrow(
+        new RuleViolation("estimateHours must be a whole number 1..40"),
+      );
+      expect(listTasks(db)).toHaveLength(0);
+    });
+
+    it("rejects NaN and stores nothing", () => {
+      expect(() => createTask(db, { title: "Estimate", estimateHours: NaN })).toThrow(
         new RuleViolation("estimateHours must be a whole number 1..40"),
       );
       expect(listTasks(db)).toHaveLength(0);
