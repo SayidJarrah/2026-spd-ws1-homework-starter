@@ -30,4 +30,25 @@ describe("tasks", () => {
     const t = createTask(db, { title: "Path rule" });
     expect(() => moveTask(db, t.id, "done")).toThrow(RuleViolation);
   });
+
+  describe("estimateHours (TASK-7)", () => {
+    it.each([1, 40])("accepts the boundary %s", (hours) => {
+      expect(createTask(db, { title: "Estimate", estimateHours: hours }).estimateHours).toBe(hours);
+    });
+
+    it.each([0, 41, 1.5, "3", "abc"])("rejects %j and stores nothing", (hours) => {
+      expect(() => createTask(db, { title: "Estimate", estimateHours: hours })).toThrow(
+        new RuleViolation("estimateHours must be a whole number 1..40"),
+      );
+      expect(listTasks(db)).toHaveLength(0);
+    });
+
+    it("stores null when estimateHours is omitted", () => {
+      expect(createTask(db, { title: "No estimate" }).estimateHours).toBeNull();
+    });
+
+    it("treats null like an omitted estimate", () => {
+      expect(createTask(db, { title: "Null estimate", estimateHours: null }).estimateHours).toBeNull();
+    });
+  });
 });

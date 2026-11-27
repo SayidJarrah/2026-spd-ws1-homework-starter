@@ -14,15 +14,25 @@ export class RuleViolation extends Error {}
 
 const NEXT: Record<Status, Status[]> = { todo: ["doing"], doing: ["todo", "done"], done: [] };
 
-export function createTask(db: DatabaseSync, input: { title: string; assignee?: string; estimateHours?: number }): Task {
+/** Absent or null → null; otherwise a whole number 1..40. Strings are never coerced. */
+function parseEstimate(value: unknown): number | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 40) {
+    throw new RuleViolation("estimateHours must be a whole number 1..40");
+  }
+  return value;
+}
+
+export function createTask(
+  db: DatabaseSync,
+  input: { title: string; assignee?: string; estimateHours?: unknown },
+): Task {
   const title = input.title?.trim() ?? "";
   if (title.length < 1 || title.length > 120) throw new RuleViolation("title must be 1..120 characters");
-  if (input.estimateHours !== undefined && (input.estimateHours < 1 || input.estimateHours > 40)) {
-    throw new RuleViolation("estimateHours must be 1..40");
-  }
+  const estimateHours = parseEstimate(input.estimateHours);
   const result = db
     .prepare("insert into tasks (title, assignee, estimate_hours) values (?, ?, ?)")
-    .run(title, input.assignee ?? null, input.estimateHours ?? null);
+    .run(title, input.assignee ?? null, estimateHours);
   return getTask(db, Number(result.lastInsertRowid))!;
 }
 
