@@ -17,6 +17,7 @@ Tiny Next.js 16 app with a SQLite API. Business rules live in `lib/tasks.ts`; ro
 - Validation lives in `lib/tasks.ts` and throws `RuleViolation`; routes map it to 422, a malformed body to 400.
   A DB `check` mirrors the rule, it never replaces it.
 - Every rule change comes with tests, boundaries included. Done means `npm test` and `npm run typecheck` exit 0.
+- Every commit carries trailers `Refs: <KEY>` (+ `Assisted-by:` when an agent helped): `.claude/rules/commits.md`.
 - Ask before adding dependencies. Never read or write `.env`. No `CLAUDE.md` in the repo.
 
 ## Where to look
